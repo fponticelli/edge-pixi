@@ -1,12 +1,12 @@
-package game.systems;
+package edge.pixi.systems;
 
 import edge.Entity;
 import edge.ISystem;
-import game.components.Display;
-import game.components.Position;
+import edge.pixi.components.DisplaySprite;
+import edge.pixi.components.Position;
 
 class UpdatePosition implements ISystem {
-  public function update(d : Display, p : Position) {
+  public function update(d : DisplaySprite, p : Position) {
     d.sprite.x = p.x;
     d.sprite.y = p.y;
   }
