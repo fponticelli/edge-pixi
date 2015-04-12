@@ -7,18 +7,22 @@ import edge.pixi.systems.*;
 
 class Main {
 	public function new(renderer : SystemRenderer) {
-    var world = new edge.World();
+    var world = new edge.World(),
+				rendererSystem = new Renderer(renderer);
 
-		var bunny = world.engine.create([
-			DisplaySprite.fromImagePath("assets/bunny.png"),
-			new Position(100, 100)
-		]);
+		// interaction
+		world.physics.add(new MouseBunnyCreator(rendererSystem.stage));
 
 		// physics
-		world.physics.add(new UpdatePosition());
+		world.physics.add(new UpdatePositionVelocity());
+		world.physics.add(new UpdateRotationVelocity());
 
     // rendering systems
-    world.render.add(new Renderer(renderer));
+		world.render.add(new UpdatePosition());
+		world.render.add(new UpdateRotation());
+    world.render.add(rendererSystem);
+
+		world.frame.add(new BunnyExterminator(800, 600, 30));
 
 		// run
 		world.start();

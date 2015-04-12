@@ -6,6 +6,72 @@ function $extend(from, fields) {
 	if( fields.toString !== Object.prototype.toString ) proto.toString = fields.toString;
 	return proto;
 }
+var edge_ISystem = function() { };
+edge_ISystem.__name__ = ["edge","ISystem"];
+edge_ISystem.prototype = {
+	__class__: edge_ISystem
+};
+var BunnyExterminator = function(width,height,offset) {
+	this.width = width;
+	this.height = height;
+	this.offset = offset;
+	this.__process__ = new BunnyExterminator_$SystemProcess(this);
+};
+BunnyExterminator.__name__ = ["BunnyExterminator"];
+BunnyExterminator.__interfaces__ = [edge_ISystem];
+BunnyExterminator.prototype = {
+	update: function(position) {
+		if(position.x < -this.offset || position.x > this.width + this.offset || position.y < -this.offset || position.y > this.height + this.offset) this.entity.destroy();
+	}
+	,toString: function() {
+		return "BunnyExterminator";
+	}
+	,__class__: BunnyExterminator
+};
+var edge_core_ISystemProcess = function() { };
+edge_core_ISystemProcess.__name__ = ["edge","core","ISystemProcess"];
+edge_core_ISystemProcess.prototype = {
+	__class__: edge_core_ISystemProcess
+};
+var BunnyExterminator_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+BunnyExterminator_$SystemProcess.__name__ = ["BunnyExterminator_SystemProcess"];
+BunnyExterminator_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+BunnyExterminator_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			this.system.entity = item.entity;
+			data = item.data;
+			this.system.update(data.position);
+		}
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 1;
+		var o = { position : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
+				o.position = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: BunnyExterminator_$SystemProcess
+};
 var EReg = function(r,opt) {
 	opt = opt.split("u").join("");
 	this.r = new RegExp(r,opt);
@@ -107,9 +173,14 @@ HxOverrides.iter = function(a) {
 };
 var Main = function(renderer) {
 	var world = new edge_World();
-	var bunny = world.engine.create([edge_pixi_components_DisplaySprite.fromImagePath("assets/bunny.png"),new edge_pixi_components_Position(100,100)]);
-	world.physics.add(new edge_pixi_systems_UpdatePosition());
-	world.render.add(new edge_pixi_systems_Renderer(renderer));
+	var rendererSystem = new edge_pixi_systems_Renderer(renderer);
+	world.physics.add(new MouseBunnyCreator(rendererSystem.stage));
+	world.physics.add(new edge_pixi_systems_UpdatePositionVelocity());
+	world.physics.add(new edge_pixi_systems_UpdateRotationVelocity());
+	world.render.add(new edge_pixi_systems_UpdatePosition());
+	world.render.add(new edge_pixi_systems_UpdateRotation());
+	world.render.add(rendererSystem);
+	world.frame.add(new BunnyExterminator(800,600,30));
 	world.start();
 };
 Main.__name__ = ["Main"];
@@ -123,6 +194,84 @@ Main.prototype = {
 	__class__: Main
 };
 Math.__name__ = ["Math"];
+var edge_pixi_cosystems_MouseSystem = function(stage) {
+	this.stage = stage;
+	this.stage.interactive = true;
+	this.x = this.y = this.lx = this.ly = this.dx = this.dy = 0;
+	this.isDown = false;
+	this.firstDown = false;
+	window.document.addEventListener("mousedown",$bind(this,this.mouseDown));
+	window.document.addEventListener("mouseup",$bind(this,this.mouseUp));
+	this.stage.on("mousemove",$bind(this,this.mouseMove));
+};
+edge_pixi_cosystems_MouseSystem.__name__ = ["edge","pixi","cosystems","MouseSystem"];
+edge_pixi_cosystems_MouseSystem.prototype = {
+	before: function() {
+		this.dx = this.x - this.lx;
+		this.dy = this.y - this.ly;
+	}
+	,after: function() {
+		this.firstDown = false;
+		this.lx = this.x;
+		this.ly = this.y;
+	}
+	,mouseMove: function(e) {
+		var pt = e.data.global;
+		this.x = pt.x;
+		this.y = pt.y;
+	}
+	,mouseDown: function(_) {
+		this.isDown = true;
+		this.firstDown = true;
+	}
+	,mouseUp: function(_) {
+		this.isDown = false;
+	}
+	,__class__: edge_pixi_cosystems_MouseSystem
+};
+var MouseBunnyCreator = function(stage) {
+	edge_pixi_cosystems_MouseSystem.call(this,stage);
+	this.__process__ = new MouseBunnyCreator_$SystemProcess(this);
+};
+MouseBunnyCreator.__name__ = ["MouseBunnyCreator"];
+MouseBunnyCreator.__interfaces__ = [edge_ISystem];
+MouseBunnyCreator.r = function() {
+	return (Math.random() < 0.5?-1:1) * Math.random() * Math.random();
+};
+MouseBunnyCreator.__super__ = edge_pixi_cosystems_MouseSystem;
+MouseBunnyCreator.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,{
+	createBunny: function(x,y) {
+		var sprite = edge_pixi_components_DisplaySprite.fromImagePath("assets/bunny.png");
+		sprite.sprite.anchor.x = 0.5;
+		sprite.sprite.anchor.y = 0.5;
+		return this.engine.create([sprite,new edge_pixi_components_Position(x,y),new edge_pixi_components_Rotation(0),new edge_pixi_components_RotationVelocity(MouseBunnyCreator.r() * 0.3),new edge_pixi_components_PositionVelocity(MouseBunnyCreator.r(),MouseBunnyCreator.r())]);
+	}
+	,update: function() {
+		if(this.isDown) this.createBunny(this.x,this.y);
+	}
+	,toString: function() {
+		return "MouseBunnyCreator";
+	}
+	,__class__: MouseBunnyCreator
+});
+var MouseBunnyCreator_$SystemProcess = function(system) {
+	this.system = system;
+};
+MouseBunnyCreator_$SystemProcess.__name__ = ["MouseBunnyCreator_SystemProcess"];
+MouseBunnyCreator_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+MouseBunnyCreator_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+	}
+	,addEntity: function(entity) {
+	}
+	,update: function(engine,delta) {
+		this.system.engine = engine;
+		this.system.before();
+		this.system.update();
+		this.system.after();
+	}
+	,__class__: MouseBunnyCreator_$SystemProcess
+};
 var Std = function() { };
 Std.__name__ = ["Std"];
 Std.string = function(s) {
@@ -340,11 +489,6 @@ edge_Entity.prototype = {
 };
 var edge_IComponent = function() { };
 edge_IComponent.__name__ = ["edge","IComponent"];
-var edge_ISystem = function() { };
-edge_ISystem.__name__ = ["edge","ISystem"];
-edge_ISystem.prototype = {
-	__class__: edge_ISystem
-};
 var edge_Phase = function(engine) {
 	this.engine = engine;
 	this.mapSystem = new haxe_ds_ObjectMap();
@@ -530,11 +674,6 @@ edge_World.prototype = {
 	}
 	,__class__: edge_World
 };
-var edge_core_ISystemProcess = function() { };
-edge_core_ISystemProcess.__name__ = ["edge","core","ISystemProcess"];
-edge_core_ISystemProcess.prototype = {
-	__class__: edge_core_ISystemProcess
-};
 var edge_core_NodeSystem = function(system) {
 	this.system = system;
 };
@@ -582,6 +721,40 @@ edge_pixi_components_Position.prototype = {
 		return "Position(x=$x,y=$y)";
 	}
 	,__class__: edge_pixi_components_Position
+};
+var edge_pixi_components_PositionVelocity = function(dx,dy) {
+	this.dx = dx;
+	this.dy = dy;
+};
+edge_pixi_components_PositionVelocity.__name__ = ["edge","pixi","components","PositionVelocity"];
+edge_pixi_components_PositionVelocity.__interfaces__ = [edge_IComponent];
+edge_pixi_components_PositionVelocity.prototype = {
+	toString: function(dx,dy) {
+		return "PositionVelocity(dx=$dx,dy=$dy)";
+	}
+	,__class__: edge_pixi_components_PositionVelocity
+};
+var edge_pixi_components_Rotation = function(angle) {
+	this.angle = angle;
+};
+edge_pixi_components_Rotation.__name__ = ["edge","pixi","components","Rotation"];
+edge_pixi_components_Rotation.__interfaces__ = [edge_IComponent];
+edge_pixi_components_Rotation.prototype = {
+	toString: function(angle) {
+		return "Rotation(angle=$angle)";
+	}
+	,__class__: edge_pixi_components_Rotation
+};
+var edge_pixi_components_RotationVelocity = function(dangle) {
+	this.dangle = dangle;
+};
+edge_pixi_components_RotationVelocity.__name__ = ["edge","pixi","components","RotationVelocity"];
+edge_pixi_components_RotationVelocity.__interfaces__ = [edge_IComponent];
+edge_pixi_components_RotationVelocity.prototype = {
+	toString: function(dangle) {
+		return "RotationVelocity(dangle=$dangle)";
+	}
+	,__class__: edge_pixi_components_RotationVelocity
 };
 var edge_pixi_systems_Renderer = function(renderer,stage) {
 	if(null != stage) this.stage = stage; else this.stage = new PIXI.Container();
@@ -655,6 +828,63 @@ edge_pixi_systems_UpdatePosition.prototype = {
 	}
 	,__class__: edge_pixi_systems_UpdatePosition
 };
+var edge_pixi_systems_UpdatePositionVelocity = function() {
+	this.__process__ = new edge_pixi_systems_UpdatePositionVelocity_$SystemProcess(this);
+};
+edge_pixi_systems_UpdatePositionVelocity.__name__ = ["edge","pixi","systems","UpdatePositionVelocity"];
+edge_pixi_systems_UpdatePositionVelocity.__interfaces__ = [edge_ISystem];
+edge_pixi_systems_UpdatePositionVelocity.prototype = {
+	update: function(r,rs) {
+		r.x += rs.dx;
+		r.y += rs.dy;
+	}
+	,toString: function() {
+		return "edge.pixi.systems.UpdatePositionVelocity";
+	}
+	,__class__: edge_pixi_systems_UpdatePositionVelocity
+};
+var edge_pixi_systems_UpdatePositionVelocity_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+edge_pixi_systems_UpdatePositionVelocity_$SystemProcess.__name__ = ["edge","pixi","systems","UpdatePositionVelocity_SystemProcess"];
+edge_pixi_systems_UpdatePositionVelocity_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+edge_pixi_systems_UpdatePositionVelocity_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			data = item.data;
+			this.system.update(data.r,data.rs);
+		}
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 2;
+		var o = { r : null, rs : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
+				o.r = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,edge_pixi_components_PositionVelocity)) {
+				o.rs = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: edge_pixi_systems_UpdatePositionVelocity_$SystemProcess
+};
 var edge_pixi_systems_UpdatePosition_$SystemProcess = function(system) {
 	this.system = system;
 	this.updateItems = new edge_View();
@@ -696,6 +926,118 @@ edge_pixi_systems_UpdatePosition_$SystemProcess.prototype = {
 		var added = count == 0 && this.updateItems.tryAdd(entity,o);
 	}
 	,__class__: edge_pixi_systems_UpdatePosition_$SystemProcess
+};
+var edge_pixi_systems_UpdateRotation = function() {
+	this.__process__ = new edge_pixi_systems_UpdateRotation_$SystemProcess(this);
+};
+edge_pixi_systems_UpdateRotation.__name__ = ["edge","pixi","systems","UpdateRotation"];
+edge_pixi_systems_UpdateRotation.__interfaces__ = [edge_ISystem];
+edge_pixi_systems_UpdateRotation.prototype = {
+	update: function(d,r) {
+		d.sprite.rotation = r.angle;
+	}
+	,toString: function() {
+		return "edge.pixi.systems.UpdateRotation";
+	}
+	,__class__: edge_pixi_systems_UpdateRotation
+};
+var edge_pixi_systems_UpdateRotationVelocity = function() {
+	this.__process__ = new edge_pixi_systems_UpdateRotationVelocity_$SystemProcess(this);
+};
+edge_pixi_systems_UpdateRotationVelocity.__name__ = ["edge","pixi","systems","UpdateRotationVelocity"];
+edge_pixi_systems_UpdateRotationVelocity.__interfaces__ = [edge_ISystem];
+edge_pixi_systems_UpdateRotationVelocity.prototype = {
+	update: function(r,rs) {
+		r.angle += rs.dangle;
+	}
+	,toString: function() {
+		return "edge.pixi.systems.UpdateRotationVelocity";
+	}
+	,__class__: edge_pixi_systems_UpdateRotationVelocity
+};
+var edge_pixi_systems_UpdateRotationVelocity_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+edge_pixi_systems_UpdateRotationVelocity_$SystemProcess.__name__ = ["edge","pixi","systems","UpdateRotationVelocity_SystemProcess"];
+edge_pixi_systems_UpdateRotationVelocity_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+edge_pixi_systems_UpdateRotationVelocity_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			data = item.data;
+			this.system.update(data.r,data.rs);
+		}
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 2;
+		var o = { r : null, rs : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,edge_pixi_components_Rotation)) {
+				o.r = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,edge_pixi_components_RotationVelocity)) {
+				o.rs = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: edge_pixi_systems_UpdateRotationVelocity_$SystemProcess
+};
+var edge_pixi_systems_UpdateRotation_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+edge_pixi_systems_UpdateRotation_$SystemProcess.__name__ = ["edge","pixi","systems","UpdateRotation_SystemProcess"];
+edge_pixi_systems_UpdateRotation_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+edge_pixi_systems_UpdateRotation_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			data = item.data;
+			this.system.update(data.d,data.r);
+		}
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 2;
+		var o = { d : null, r : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,edge_pixi_components_DisplaySprite)) {
+				o.d = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,edge_pixi_components_Rotation)) {
+				o.r = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: edge_pixi_systems_UpdateRotation_$SystemProcess
 };
 var haxe_IMap = function() { };
 haxe_IMap.__name__ = ["haxe","IMap"];
