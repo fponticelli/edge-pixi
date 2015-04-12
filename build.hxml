@@ -1,5 +1,6 @@
 -js bin/demo.js
 -main Main
+-lib pixijs
 -lib edge
 -lib thx.core
 -cp src
