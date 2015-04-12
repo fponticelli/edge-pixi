@@ -1,10 +1,14 @@
+import edge.pixi.systems.Renderer;
 import pixi.core.renderers.SystemRenderer;
 import pixi.core.renderers.Detector;
 import js.Browser;
 
 class Main {
 	public function new(renderer : SystemRenderer) {
+    var world = new edge.World();
 
+    // rendering systems
+    world.render.add(new Renderer(renderer));
 	}
 
 	static function main() {
