@@ -1,7 +1,7 @@
-package edge.cosystem;
+package edge.pixi.cosystems;
 
 import pixi.core.display.Container;
-import pixi.core.utils.EventData;
+import pixi.plugins.eventemitter.EventTarget;
 import pixi.core.math.Point;
 
 class MouseSystem {
@@ -22,23 +22,23 @@ class MouseSystem {
     isDown = false;
     firstDown = false;
 
+    js.Browser.document.addEventListener("mousedown", mouseDown);
+    js.Browser.document.addEventListener("mouseup", mouseUp);
     this.stage.on("mousemove", mouseMove);
-    this.stage.on("mousedown", mouseDown);
-    this.stage.on("mouseup", mouseUp);
   }
 
-	function before() {
+	public function before() {
 		dx = x - lx;
 		dy = y - ly;
 	}
 
-	function after() {
+	public function after() {
 		firstDown = false;
 		lx = x;
 		ly = y;
 	}
 
-  function mouseMove(e : EventData) {
+  function mouseMove(e : EventTarget) {
     var pt = (e.data.global : Point);
     x = pt.x;
     y = pt.y;

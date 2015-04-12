@@ -1,4 +1,4 @@
-package game.systems;
+package edge.pixi.systems;
 
 import edge.Entity;
 import edge.ISystem;
