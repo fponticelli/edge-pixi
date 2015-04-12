@@ -1,0 +1,15 @@
+{
+  "name": "edge-pixi",
+  "url": "https://github.com/fponticelli/edge-pixi",
+  "license": "MIT",
+  "classPath": "src",
+  "tags": ["edge", "pixi"],
+  "description": "PixiJS components and systems for Edge",
+  "releasenote": "Basics",
+  "version": "0.0.1",
+  "contributors": ["fponticelli", "mlms13"],
+  "dependencies": {
+    "edge": "",
+    "pixijs": ""
+  }
+}
