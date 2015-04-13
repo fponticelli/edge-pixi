@@ -25,12 +25,13 @@ class MouseBunnyCreator extends edge.pixi.cosystems.MouseSystem implements edge.
 			new Position(x, y),
 			new Rotation(0),
 			new RotationVelocity(r() * 0.3),
-			new PositionVelocity(r(), r())
+			new PositionVelocity(r()+dx, r()+dy)
 		]);
 	}
 
 	function update() {
 		if(isDown) {
+			for(i in 0...10)
 			createBunny(x, y);
 		}
 	}

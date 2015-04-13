@@ -20,8 +20,14 @@ var BunnyExterminator = function(width,height,offset) {
 BunnyExterminator.__name__ = ["BunnyExterminator"];
 BunnyExterminator.__interfaces__ = [edge_ISystem];
 BunnyExterminator.prototype = {
-	update: function(position) {
-		if(position.x < -this.offset || position.x > this.width + this.offset || position.y < -this.offset || position.y > this.height + this.offset) this.entity.destroy();
+	before: function() {
+		this.counter = 0;
+	}
+	,update: function(position) {
+		if(position.x < -this.offset || position.x > this.width + this.offset || position.y < -this.offset || position.y > this.height + this.offset) this.entity.destroy(); else this.counter++;
+	}
+	,after: function() {
+		console.log("Bunnies " + this.counter);
 	}
 	,toString: function() {
 		return "BunnyExterminator";
@@ -47,6 +53,7 @@ BunnyExterminator_$SystemProcess.prototype = {
 		this.updateMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
+		if(this.updateItems.count > 0) this.system.before();
 		var data;
 		var $it0 = this.updateItems.iterator();
 		while( $it0.hasNext() ) {
@@ -55,6 +62,7 @@ BunnyExterminator_$SystemProcess.prototype = {
 			data = item.data;
 			this.system.update(data.position);
 		}
+		this.system.after();
 	}
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
@@ -244,10 +252,16 @@ MouseBunnyCreator.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,
 		var sprite = edge_pixi_components_DisplaySprite.fromImagePath("assets/bunny.png");
 		sprite.sprite.anchor.x = 0.5;
 		sprite.sprite.anchor.y = 0.5;
-		return this.engine.create([sprite,new edge_pixi_components_Position(x,y),new edge_pixi_components_Rotation(0),new edge_pixi_components_RotationVelocity(MouseBunnyCreator.r() * 0.3),new edge_pixi_components_PositionVelocity(MouseBunnyCreator.r(),MouseBunnyCreator.r())]);
+		return this.engine.create([sprite,new edge_pixi_components_Position(x,y),new edge_pixi_components_Rotation(0),new edge_pixi_components_RotationVelocity(MouseBunnyCreator.r() * 0.3),new edge_pixi_components_PositionVelocity(MouseBunnyCreator.r() + this.dx,MouseBunnyCreator.r() + this.dy)]);
 	}
 	,update: function() {
-		if(this.isDown) this.createBunny(this.x,this.y);
+		if(this.isDown) {
+			var _g = 0;
+			while(_g < 10) {
+				var i = _g++;
+				this.createBunny(this.x,this.y);
+			}
+		}
 	}
 	,toString: function() {
 		return "MouseBunnyCreator";
