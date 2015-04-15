@@ -109,11 +109,11 @@ var Main = function(renderer) {
 	var world = new edge_World();
 	var renderingSystem = new edge_pixi_systems_Renderer(renderer);
 	var _g = 0;
-	while(_g < 15) {
+	while(_g < 20) {
 		var i = _g++;
 		var posX = Math.random() * 800;
 		var posY = Math.random() * 600;
-		world.engine.create([new edge_pixi_components_Position(posX,posY),new edge_pixi_components_PositionVelocity(Main.r(),Main.r()),new edge_pixi_components_HitArea(posX,posY,15)]);
+		world.engine.create([new edge_pixi_components_Position(posX,posY),new edge_pixi_components_PositionVelocity(Main.r(),Main.r()),new edge_pixi_components_HitArea(new PIXI.Point(posX,posY),15)]);
 	}
 	world.render.add(renderingSystem);
 	world.render.add(new UpdateGeometryPosition(renderingSystem.stage));
@@ -205,12 +205,26 @@ UpdateGeometryPosition.prototype = {
 	before: function() {
 		this.stage.removeChildren();
 	}
+	,isOverlapping: function(origin,radius,targets) {
+		var $it0 = targets.iterator();
+		while( $it0.hasNext() ) {
+			var t = $it0.next();
+			var tOrigin = t.data.hitArea.origin;
+			var tRadius = t.data.hitArea.radius;
+			var dx = origin.x - tOrigin.x;
+			var dy = origin.y - tOrigin.y;
+			var distance = Math.sqrt(dx * dx + dy * dy);
+			if(origin.x == tOrigin.x && origin.y == tOrigin.y) continue;
+			if(distance < t.data.hitArea.radius + radius) return true;
+		}
+		return false;
+	}
 	,update: function(p,pv,ha) {
-		ha.originX += pv.dx;
-		ha.originY += pv.dy;
 		var g = new PIXI.Graphics();
-		g.beginFill(43741);
-		g.drawCircle(ha.originX,ha.originY,ha.radius);
+		ha.origin.x += pv.dx;
+		ha.origin.y += pv.dy;
+		if(this.isOverlapping(ha.origin,ha.radius,this.targets)) g.beginFill(15610675); else g.beginFill(43741);
+		g.drawCircle(ha.origin.x,ha.origin.y,ha.radius);
 		g.endFill();
 		this.stage.addChild(g);
 	}
@@ -227,14 +241,17 @@ edge_core_ISystemProcess.prototype = {
 var UpdateGeometryPosition_$SystemProcess = function(system) {
 	this.system = system;
 	this.updateItems = new edge_View();
+	system.targets = new edge_View();
 };
 UpdateGeometryPosition_$SystemProcess.__name__ = ["UpdateGeometryPosition_SystemProcess"];
 UpdateGeometryPosition_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
 UpdateGeometryPosition_$SystemProcess.prototype = {
 	removeEntity: function(entity) {
 		this.updateItems.tryRemove(entity);
+		this.system.targets.tryRemove(entity);
 	}
 	,addEntity: function(entity) {
+		this.targetsMatchRequirements(entity);
 		this.updateMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
@@ -243,9 +260,24 @@ UpdateGeometryPosition_$SystemProcess.prototype = {
 		var $it0 = this.updateItems.iterator();
 		while( $it0.hasNext() ) {
 			var item = $it0.next();
+			this.system.entity = item.entity;
 			data = item.data;
 			this.system.update(data.p,data.pv,data.ha);
 		}
+	}
+	,targetsMatchRequirements: function(entity) {
+		var removed = this.system.targets.tryRemove(entity);
+		var count = 1;
+		var o = { hitArea : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,edge_pixi_components_HitArea)) {
+				o.hitArea = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.system.targets.tryAdd(entity,o);
 	}
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
@@ -651,16 +683,15 @@ edge_pixi_components_DisplaySprite.prototype = {
 	}
 	,__class__: edge_pixi_components_DisplaySprite
 };
-var edge_pixi_components_HitArea = function(originX,originY,radius) {
-	this.originX = originX;
-	this.originY = originY;
+var edge_pixi_components_HitArea = function(origin,radius) {
+	this.origin = origin;
 	this.radius = radius;
 };
 edge_pixi_components_HitArea.__name__ = ["edge","pixi","components","HitArea"];
 edge_pixi_components_HitArea.__interfaces__ = [edge_IComponent];
 edge_pixi_components_HitArea.prototype = {
-	toString: function(originX,originY,radius) {
-		return "HitArea(originX=$originX,originY=$originY,radius=$radius)";
+	toString: function(origin,radius) {
+		return "HitArea(origin=$origin,radius=$radius)";
 	}
 	,__class__: edge_pixi_components_HitArea
 };

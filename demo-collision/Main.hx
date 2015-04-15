@@ -1,6 +1,7 @@
 import js.Browser;
 import pixi.core.renderers.SystemRenderer;
 import pixi.core.renderers.Detector;
+import pixi.core.math.Point;
 
 import edge.pixi.components.*;
 import edge.pixi.systems.*;
@@ -10,14 +11,14 @@ class Main {
     var world = new edge.World(),
         renderingSystem = new Renderer(renderer);
 
-    for (i in 0...15) {
+    for (i in 0...20) {
       var posX = Math.random() * 800;
       var posY = Math.random() * 600;
 
       world.engine.create([
         new Position(posX, posY),
         new PositionVelocity(r(), r()),
-        new HitArea(posX, posY, 15)
+        new HitArea(new Point(posX, posY), 15)
       ]);
     }
 
