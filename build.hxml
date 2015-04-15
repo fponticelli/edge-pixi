@@ -5,3 +5,13 @@
 -lib thx.core
 -cp src
 -cp demo
+
+--next
+
+-js bin/collision.js
+-main Main
+-lib pixijs
+-lib edge
+-lib thx.core
+-cp src
+-cp demo-collision
