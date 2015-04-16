@@ -25,6 +25,7 @@ BunnyExterminator.prototype = {
 	}
 	,update: function(position) {
 		if(position.x < -this.offset || position.x > this.width + this.offset || position.y < -this.offset || position.y > this.height + this.offset) this.entity.destroy(); else this.counter++;
+		return true;
 	}
 	,after: function() {
 		console.log("Bunnies " + this.counter);
@@ -53,6 +54,7 @@ BunnyExterminator_$SystemProcess.prototype = {
 		this.updateMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
+		var result = true;
 		if(this.updateItems.count > 0) this.system.before();
 		var data;
 		var $it0 = this.updateItems.iterator();
@@ -60,9 +62,11 @@ BunnyExterminator_$SystemProcess.prototype = {
 			var item = $it0.next();
 			this.system.entity = item.entity;
 			data = item.data;
-			this.system.update(data.position);
+			result = this.system.update(data.position);
+			if(!result) break;
 		}
 		this.system.after();
+		return result;
 	}
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
@@ -262,6 +266,7 @@ MouseBunnyCreator.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,
 				this.createBunny(this.x,this.y);
 			}
 		}
+		return true;
 	}
 	,toString: function() {
 		return "MouseBunnyCreator";
@@ -280,9 +285,11 @@ MouseBunnyCreator_$SystemProcess.prototype = {
 	}
 	,update: function(engine,delta) {
 		this.system.engine = engine;
+		var result = true;
 		this.system.before();
-		this.system.update();
+		result = this.system.update();
 		this.system.after();
+		return result;
 	}
 	,__class__: MouseBunnyCreator_$SystemProcess
 };
@@ -507,6 +514,8 @@ var edge_Phase = function(engine) {
 	this.engine = engine;
 	this.mapSystem = new haxe_ds_ObjectMap();
 	this.mapType = new haxe_ds_StringMap();
+	this.phases = [];
+	this.enabled = true;
 };
 edge_Phase.__name__ = ["edge","Phase"];
 edge_Phase.prototype = {
@@ -521,6 +530,11 @@ edge_Phase.prototype = {
 			this.last.next = node;
 			this.last = node;
 		}
+	}
+	,createPhase: function() {
+		var phase = new edge_Phase(this.engine);
+		this.phases.push(phase);
+		return phase;
 	}
 	,clear: function() {
 		var $it0 = this.systems();
@@ -591,11 +605,18 @@ edge_Phase.prototype = {
 		return new edge_core_NodeSystemIterator(this.first);
 	}
 	,update: function(t) {
-		if(null == this.engine) return;
+		if(null == this.engine || !this.enabled) return;
 		var $it0 = this.systems();
 		while( $it0.hasNext() ) {
 			var system = $it0.next();
 			this.engine.updateSystem(system,t);
+		}
+		var _g = 0;
+		var _g1 = this.phases;
+		while(_g < _g1.length) {
+			var phase = _g1[_g];
+			++_g;
+			phase.update(t);
 		}
 	}
 	,createNode: function(system) {
@@ -786,6 +807,7 @@ edge_pixi_systems_Renderer.prototype = {
 	}
 	,update: function() {
 		this.renderer.render(this.stage);
+		return true;
 	}
 	,toString: function() {
 		return "edge.pixi.systems.Renderer";
@@ -807,7 +829,9 @@ edge_pixi_systems_Renderer_$SystemProcess.prototype = {
 		this.entitiesMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
-		this.system.update();
+		var result = true;
+		result = this.system.update();
+		return result;
 	}
 	,entitiesMatchRequirements: function(entity) {
 		var removed = this.system.entities.tryRemove(entity);
@@ -836,6 +860,7 @@ edge_pixi_systems_UpdatePosition.prototype = {
 	update: function(d,p) {
 		d.sprite.x = p.x;
 		d.sprite.y = p.y;
+		return true;
 	}
 	,toString: function() {
 		return "edge.pixi.systems.UpdatePosition";
@@ -851,6 +876,7 @@ edge_pixi_systems_UpdatePositionVelocity.prototype = {
 	update: function(r,rs) {
 		r.x += rs.dx;
 		r.y += rs.dy;
+		return true;
 	}
 	,toString: function() {
 		return "edge.pixi.systems.UpdatePositionVelocity";
@@ -871,13 +897,16 @@ edge_pixi_systems_UpdatePositionVelocity_$SystemProcess.prototype = {
 		this.updateMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
+		var result = true;
 		var data;
 		var $it0 = this.updateItems.iterator();
 		while( $it0.hasNext() ) {
 			var item = $it0.next();
 			data = item.data;
-			this.system.update(data.r,data.rs);
+			result = this.system.update(data.r,data.rs);
+			if(!result) break;
 		}
+		return result;
 	}
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
@@ -913,13 +942,16 @@ edge_pixi_systems_UpdatePosition_$SystemProcess.prototype = {
 		this.updateMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
+		var result = true;
 		var data;
 		var $it0 = this.updateItems.iterator();
 		while( $it0.hasNext() ) {
 			var item = $it0.next();
 			data = item.data;
-			this.system.update(data.d,data.p);
+			result = this.system.update(data.d,data.p);
+			if(!result) break;
 		}
+		return result;
 	}
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
@@ -949,6 +981,7 @@ edge_pixi_systems_UpdateRotation.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_UpdateRotation.prototype = {
 	update: function(d,r) {
 		d.sprite.rotation = r.angle;
+		return true;
 	}
 	,toString: function() {
 		return "edge.pixi.systems.UpdateRotation";
@@ -963,6 +996,7 @@ edge_pixi_systems_UpdateRotationVelocity.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_UpdateRotationVelocity.prototype = {
 	update: function(r,rs) {
 		r.angle += rs.dangle;
+		return true;
 	}
 	,toString: function() {
 		return "edge.pixi.systems.UpdateRotationVelocity";
@@ -983,13 +1017,16 @@ edge_pixi_systems_UpdateRotationVelocity_$SystemProcess.prototype = {
 		this.updateMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
+		var result = true;
 		var data;
 		var $it0 = this.updateItems.iterator();
 		while( $it0.hasNext() ) {
 			var item = $it0.next();
 			data = item.data;
-			this.system.update(data.r,data.rs);
+			result = this.system.update(data.r,data.rs);
+			if(!result) break;
 		}
+		return result;
 	}
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
@@ -1025,13 +1062,16 @@ edge_pixi_systems_UpdateRotation_$SystemProcess.prototype = {
 		this.updateMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
+		var result = true;
 		var data;
 		var $it0 = this.updateItems.iterator();
 		while( $it0.hasNext() ) {
 			var item = $it0.next();
 			data = item.data;
-			this.system.update(data.d,data.r);
+			result = this.system.update(data.d,data.r);
+			if(!result) break;
 		}
+		return result;
 	}
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);

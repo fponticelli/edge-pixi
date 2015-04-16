@@ -227,6 +227,7 @@ UpdateGeometryPosition.prototype = {
 		g.drawCircle(ha.origin.x,ha.origin.y,ha.radius);
 		g.endFill();
 		this.stage.addChild(g);
+		return true;
 	}
 	,toString: function() {
 		return "UpdateGeometryPosition";
@@ -255,6 +256,7 @@ UpdateGeometryPosition_$SystemProcess.prototype = {
 		this.updateMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
+		var result = true;
 		if(this.updateItems.count > 0) this.system.before();
 		var data;
 		var $it0 = this.updateItems.iterator();
@@ -262,8 +264,10 @@ UpdateGeometryPosition_$SystemProcess.prototype = {
 			var item = $it0.next();
 			this.system.entity = item.entity;
 			data = item.data;
-			this.system.update(data.p,data.pv,data.ha);
+			result = this.system.update(data.p,data.pv,data.ha);
+			if(!result) break;
 		}
+		return result;
 	}
 	,targetsMatchRequirements: function(entity) {
 		var removed = this.system.targets.tryRemove(entity);
@@ -411,10 +415,11 @@ edge_Entity.prototype = {
 		this.map = new haxe_ds_StringMap();
 	}
 	,exists: function(component) {
-		return this.existsType(Type.getClassName(component == null?null:js_Boot.getClass(component)));
+		return this.existsType(component == null?null:js_Boot.getClass(component));
 	}
 	,existsType: function(type) {
-		return this.map.exists(type);
+		var key = Type.getClassName(type);
+		return this.map.exists(key);
 	}
 	,remove: function(component) {
 		this._remove(component);
@@ -466,6 +471,8 @@ var edge_Phase = function(engine) {
 	this.engine = engine;
 	this.mapSystem = new haxe_ds_ObjectMap();
 	this.mapType = new haxe_ds_StringMap();
+	this.phases = [];
+	this.enabled = true;
 };
 edge_Phase.__name__ = ["edge","Phase"];
 edge_Phase.prototype = {
@@ -480,6 +487,11 @@ edge_Phase.prototype = {
 			this.last.next = node;
 			this.last = node;
 		}
+	}
+	,createPhase: function() {
+		var phase = new edge_Phase(this.engine);
+		this.phases.push(phase);
+		return phase;
 	}
 	,clear: function() {
 		var $it0 = this.systems();
@@ -550,11 +562,18 @@ edge_Phase.prototype = {
 		return new edge_core_NodeSystemIterator(this.first);
 	}
 	,update: function(t) {
-		if(null == this.engine) return;
+		if(null == this.engine || !this.enabled) return;
 		var $it0 = this.systems();
 		while( $it0.hasNext() ) {
 			var system = $it0.next();
 			this.engine.updateSystem(system,t);
+		}
+		var _g = 0;
+		var _g1 = this.phases;
+		while(_g < _g1.length) {
+			var phase = _g1[_g];
+			++_g;
+			phase.update(t);
 		}
 	}
 	,createNode: function(system) {
@@ -735,6 +754,7 @@ edge_pixi_systems_Renderer.prototype = {
 	}
 	,update: function() {
 		this.renderer.render(this.stage);
+		return true;
 	}
 	,toString: function() {
 		return "edge.pixi.systems.Renderer";
@@ -756,7 +776,9 @@ edge_pixi_systems_Renderer_$SystemProcess.prototype = {
 		this.entitiesMatchRequirements(entity);
 	}
 	,update: function(engine,delta) {
-		this.system.update();
+		var result = true;
+		result = this.system.update();
+		return result;
 	}
 	,entitiesMatchRequirements: function(entity) {
 		var removed = this.system.entities.tryRemove(entity);
@@ -882,6 +904,7 @@ haxe_ds_StringMap.prototype = {
 var js__$Boot_HaxeError = function(val) {
 	Error.call(this);
 	this.val = val;
+	this.message = String(val);
 	if(Error.captureStackTrace) Error.captureStackTrace(this,js__$Boot_HaxeError);
 };
 js__$Boot_HaxeError.__name__ = ["js","_Boot","HaxeError"];
@@ -1107,6 +1130,23 @@ thx_core_Arrays.crossMulti = function(array) {
 				result.push(t);
 			}
 		}
+	}
+	return result;
+};
+thx_core_Arrays.distinct = function(array,predicate) {
+	var result = [];
+	if(array.length <= 1) return array;
+	if(null == predicate) predicate = thx_core_Functions.equality;
+	var _g = 0;
+	while(_g < array.length) {
+		var v = [array[_g]];
+		++_g;
+		var keep = !thx_core_Arrays.any(result,(function(v) {
+			return function(r) {
+				return predicate(r,v[0]);
+			};
+		})(v));
+		if(keep) result.push(v[0]);
 	}
 	return result;
 };
@@ -1659,6 +1699,9 @@ thx_core_Ints.range = function(start,stop,step) {
 thx_core_Ints.toString = function(value,base) {
 	return value.toString(base);
 };
+thx_core_Ints.toBool = function(v) {
+	return v != 0;
+};
 thx_core_Ints.sign = function(value) {
 	if(value < 0) return -1; else return 1;
 };
@@ -1733,6 +1776,11 @@ thx_core_Strings.isDigitsOnly = function(value) {
 };
 thx_core_Strings.isEmpty = function(value) {
 	return value == null || value == "";
+};
+thx_core_Strings.random = function(value,length) {
+	if(length == null) length = 1;
+	var pos = Math.floor((value.length - length + 1) * Math.random());
+	return HxOverrides.substr(value,pos,length);
 };
 thx_core_Strings.iterator = function(s) {
 	var _this = s.split("");
@@ -1980,6 +2028,9 @@ thx_core__$Tuple_Tuple1_$Impl_$["with"] = function(this1,v) {
 thx_core__$Tuple_Tuple1_$Impl_$.toString = function(this1) {
 	return "Tuple1(" + Std.string(this1) + ")";
 };
+thx_core__$Tuple_Tuple1_$Impl_$.arrayToTuple = function(v) {
+	return v[0];
+};
 var thx_core__$Tuple_Tuple2_$Impl_$ = {};
 thx_core__$Tuple_Tuple2_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple2_Impl_"];
 thx_core__$Tuple_Tuple2_$Impl_$._new = function(_0,_1) {
@@ -2006,6 +2057,9 @@ thx_core__$Tuple_Tuple2_$Impl_$["with"] = function(this1,v) {
 thx_core__$Tuple_Tuple2_$Impl_$.toString = function(this1) {
 	return "Tuple2(" + Std.string(this1._0) + "," + Std.string(this1._1) + ")";
 };
+thx_core__$Tuple_Tuple2_$Impl_$.arrayToTuple2 = function(v) {
+	return { _0 : v[0], _1 : v[1]};
+};
 var thx_core__$Tuple_Tuple3_$Impl_$ = {};
 thx_core__$Tuple_Tuple3_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple3_Impl_"];
 thx_core__$Tuple_Tuple3_$Impl_$._new = function(_0,_1,_2) {
@@ -2025,6 +2079,9 @@ thx_core__$Tuple_Tuple3_$Impl_$["with"] = function(this1,v) {
 };
 thx_core__$Tuple_Tuple3_$Impl_$.toString = function(this1) {
 	return "Tuple3(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + ")";
+};
+thx_core__$Tuple_Tuple3_$Impl_$.arrayToTuple3 = function(v) {
+	return { _0 : v[0], _1 : v[1], _2 : v[2]};
 };
 var thx_core__$Tuple_Tuple4_$Impl_$ = {};
 thx_core__$Tuple_Tuple4_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple4_Impl_"];
@@ -2046,6 +2103,9 @@ thx_core__$Tuple_Tuple4_$Impl_$["with"] = function(this1,v) {
 thx_core__$Tuple_Tuple4_$Impl_$.toString = function(this1) {
 	return "Tuple4(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + ")";
 };
+thx_core__$Tuple_Tuple4_$Impl_$.arrayToTuple4 = function(v) {
+	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3]};
+};
 var thx_core__$Tuple_Tuple5_$Impl_$ = {};
 thx_core__$Tuple_Tuple5_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple5_Impl_"];
 thx_core__$Tuple_Tuple5_$Impl_$._new = function(_0,_1,_2,_3,_4) {
@@ -2066,6 +2126,9 @@ thx_core__$Tuple_Tuple5_$Impl_$["with"] = function(this1,v) {
 thx_core__$Tuple_Tuple5_$Impl_$.toString = function(this1) {
 	return "Tuple5(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + "," + Std.string(this1._4) + ")";
 };
+thx_core__$Tuple_Tuple5_$Impl_$.arrayToTuple5 = function(v) {
+	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3], _4 : v[4]};
+};
 var thx_core__$Tuple_Tuple6_$Impl_$ = {};
 thx_core__$Tuple_Tuple6_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple6_Impl_"];
 thx_core__$Tuple_Tuple6_$Impl_$._new = function(_0,_1,_2,_3,_4,_5) {
@@ -2082,6 +2145,9 @@ thx_core__$Tuple_Tuple6_$Impl_$.dropRight = function(this1) {
 };
 thx_core__$Tuple_Tuple6_$Impl_$.toString = function(this1) {
 	return "Tuple6(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + "," + Std.string(this1._4) + "," + Std.string(this1._5) + ")";
+};
+thx_core__$Tuple_Tuple6_$Impl_$.arrayToTuple6 = function(v) {
+	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3], _4 : v[4], _5 : v[5]};
 };
 var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
