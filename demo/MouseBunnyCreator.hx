@@ -17,9 +17,9 @@ class MouseBunnyCreator extends edge.pixi.cosystems.MouseSystem implements edge.
 	}
 
 	function createBunny(x : Float, y : Float) {
-		var sprite = DisplaySprite.fromImagePath("assets/bunny.png");
-		sprite.sprite.anchor.x = 0.5;
-		sprite.sprite.anchor.y = 0.5;
+		var sprite = Display.fromImagePath("assets/bunny.png");
+		sprite.node.anchor.x = 0.5;
+		sprite.node.anchor.y = 0.5;
 		return engine.create([
 			sprite,
 			new Position(x, y),

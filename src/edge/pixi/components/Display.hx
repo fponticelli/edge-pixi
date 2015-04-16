@@ -4,10 +4,10 @@ import edge.IComponent;
 import pixi.core.sprites.Sprite;
 import pixi.core.textures.Texture;
 
-class DisplaySprite implements IComponent {
-  var sprite : Sprite;
+class Display implements IComponent {
+  var node : Sprite;
 
 	public static function fromImagePath(path : String) {
-		return new DisplaySprite(new Sprite(Texture.fromImage(path)));
+		return new Display(new Sprite(Texture.fromImage(path)));
 	}
 }

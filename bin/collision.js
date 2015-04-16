@@ -682,19 +682,19 @@ edge_core_NodeSystemIterator.prototype = {
 	}
 	,__class__: edge_core_NodeSystemIterator
 };
-var edge_pixi_components_DisplaySprite = function(sprite) {
-	this.sprite = sprite;
+var edge_pixi_components_Display = function(node) {
+	this.node = node;
 };
-edge_pixi_components_DisplaySprite.__name__ = ["edge","pixi","components","DisplaySprite"];
-edge_pixi_components_DisplaySprite.__interfaces__ = [edge_IComponent];
-edge_pixi_components_DisplaySprite.fromImagePath = function(path) {
-	return new edge_pixi_components_DisplaySprite(new PIXI.Sprite(PIXI.Texture.fromImage(path)));
+edge_pixi_components_Display.__name__ = ["edge","pixi","components","Display"];
+edge_pixi_components_Display.__interfaces__ = [edge_IComponent];
+edge_pixi_components_Display.fromImagePath = function(path) {
+	return new edge_pixi_components_Display(new PIXI.Sprite(PIXI.Texture.fromImage(path)));
 };
-edge_pixi_components_DisplaySprite.prototype = {
-	toString: function(sprite) {
-		return "DisplaySprite(sprite=$sprite)";
+edge_pixi_components_Display.prototype = {
+	toString: function(node) {
+		return "Display(node=$node)";
 	}
-	,__class__: edge_pixi_components_DisplaySprite
+	,__class__: edge_pixi_components_Display
 };
 var edge_pixi_components_HitArea = function(origin,radius) {
 	this.origin = origin;
@@ -741,10 +741,10 @@ edge_pixi_systems_Renderer.__name__ = ["edge","pixi","systems","Renderer"];
 edge_pixi_systems_Renderer.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_Renderer.prototype = {
 	entitiesAdded: function(e,data) {
-		this.stage.addChild(data.d.sprite);
+		this.stage.addChild(data.d.node);
 	}
 	,entitiesRemoved: function(e,data) {
-		this.stage.removeChild(data.d.sprite);
+		this.stage.removeChild(data.d.node);
 	}
 	,update: function() {
 		this.renderer.render(this.stage);
@@ -781,7 +781,7 @@ edge_pixi_systems_Renderer_$SystemProcess.prototype = {
 		var $it0 = entity.map.iterator();
 		while( $it0.hasNext() ) {
 			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_DisplaySprite)) {
+			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
 				o.d = component;
 				if(--count == 0) break; else continue;
 			}
