@@ -742,17 +742,13 @@ edge_pixi_components_Display.prototype = {
 	,__class__: edge_pixi_components_Display
 };
 var edge_pixi_components_Position = function(x,y) {
-	this.x = x;
-	this.y = y;
+	PIXI.Point.call(this,x,y);
 };
 edge_pixi_components_Position.__name__ = ["edge","pixi","components","Position"];
-edge_pixi_components_Position.__interfaces__ = [edge_IComponent];
-edge_pixi_components_Position.prototype = {
-	toString: function(x,y) {
-		return "Position(x=$x,y=$y)";
-	}
-	,__class__: edge_pixi_components_Position
-};
+edge_pixi_components_Position.__super__ = PIXI.Point;
+edge_pixi_components_Position.prototype = $extend(PIXI.Point.prototype,{
+	__class__: edge_pixi_components_Position
+});
 var edge_pixi_components_PositionVelocity = function(dx,dy) {
 	this.dx = dx;
 	this.dy = dy;
