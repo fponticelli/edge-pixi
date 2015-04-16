@@ -252,9 +252,7 @@ MouseBunnyCreator.r = function() {
 MouseBunnyCreator.__super__ = edge_pixi_cosystems_MouseSystem;
 MouseBunnyCreator.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,{
 	createBunny: function(x,y) {
-		var sprite = edge_pixi_components_Display.fromImagePath("assets/bunny.png");
-		sprite.node.anchor.x = 0.5;
-		sprite.node.anchor.y = 0.5;
+		var sprite = edge_pixi_components_Display.fromImagePath("assets/bunny.png",0.5,0.5);
 		return this.engine.create([sprite,new edge_pixi_components_Position(x,y),new edge_pixi_components_Rotation(0),new edge_pixi_components_RotationVelocity(MouseBunnyCreator.r() * 0.3),new edge_pixi_components_PositionVelocity(MouseBunnyCreator.r() + this.dx,MouseBunnyCreator.r() + this.dy)]);
 	}
 	,update: function() {
@@ -729,8 +727,13 @@ var edge_pixi_components_Display = function(node) {
 };
 edge_pixi_components_Display.__name__ = ["edge","pixi","components","Display"];
 edge_pixi_components_Display.__interfaces__ = [edge_IComponent];
-edge_pixi_components_Display.fromImagePath = function(path) {
-	return new edge_pixi_components_Display(new PIXI.Sprite(PIXI.Texture.fromImage(path)));
+edge_pixi_components_Display.fromImagePath = function(path,anchorx,anchory) {
+	if(anchory == null) anchory = 0.0;
+	if(anchorx == null) anchorx = 0.0;
+	var sprite = new PIXI.Sprite(PIXI.Texture.fromImage(path));
+	sprite.anchor.x = anchorx;
+	sprite.anchor.y = anchory;
+	return new edge_pixi_components_Display(sprite);
 };
 edge_pixi_components_Display.prototype = {
 	toString: function(node) {

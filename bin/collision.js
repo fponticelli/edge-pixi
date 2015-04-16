@@ -687,8 +687,13 @@ var edge_pixi_components_Display = function(node) {
 };
 edge_pixi_components_Display.__name__ = ["edge","pixi","components","Display"];
 edge_pixi_components_Display.__interfaces__ = [edge_IComponent];
-edge_pixi_components_Display.fromImagePath = function(path) {
-	return new edge_pixi_components_Display(new PIXI.Sprite(PIXI.Texture.fromImage(path)));
+edge_pixi_components_Display.fromImagePath = function(path,anchorx,anchory) {
+	if(anchory == null) anchory = 0.0;
+	if(anchorx == null) anchorx = 0.0;
+	var sprite = new PIXI.Sprite(PIXI.Texture.fromImage(path));
+	sprite.anchor.x = anchorx;
+	sprite.anchor.y = anchory;
+	return new edge_pixi_components_Display(sprite);
 };
 edge_pixi_components_Display.prototype = {
 	toString: function(node) {
