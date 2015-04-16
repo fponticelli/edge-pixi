@@ -357,7 +357,7 @@ edge_Engine.prototype = {
 			}
 		}
 	}
-	,addSystem: function(phase,system) {
+	,addSystem: function(system) {
 		this.eachSystem(function(s) {
 			if(s == system) throw new js__$Boot_HaxeError("System \"" + Std.string(system) + "\" already exists in Engine");
 		});
@@ -375,7 +375,7 @@ edge_Engine.prototype = {
 		}
 	}
 	,updateSystem: function(system,t) {
-		system.__process__.update(this,t);
+		return system.__process__.update(this,t);
 	}
 	,matchSystems: function(entity) {
 		var _g = this;
@@ -489,11 +489,11 @@ edge_Phase.prototype = {
 		}
 	}
 	,createPhase: function() {
-		var phase = new edge_Phase(this.engine);
+		var phase = this.engine.createPhase();
 		this.phases.push(phase);
 		return phase;
 	}
-	,clear: function() {
+	,clearSystems: function() {
 		var $it0 = this.systems();
 		while( $it0.hasNext() ) {
 			var system = $it0.next();
@@ -537,7 +537,7 @@ edge_Phase.prototype = {
 		var key = this.key(system);
 		this.mapType.remove(key);
 		if(null == node) return;
-		if(null != this.engine) this.engine.removeSystem(system);
+		this.engine.removeSystem(system);
 		this.mapSystem.remove(system);
 		if(node == this.first && node == this.last) this.first = this.last = null; else if(node == this.first) {
 			this.first = node.next;
@@ -562,11 +562,13 @@ edge_Phase.prototype = {
 		return new edge_core_NodeSystemIterator(this.first);
 	}
 	,update: function(t) {
-		if(null == this.engine || !this.enabled) return;
+		if(!this.enabled) return;
+		var result;
 		var $it0 = this.systems();
 		while( $it0.hasNext() ) {
 			var system = $it0.next();
-			this.engine.updateSystem(system,t);
+			result = this.engine.updateSystem(system,t);
+			if(!result) return;
 		}
 		var _g = 0;
 		var _g1 = this.phases;
@@ -581,7 +583,7 @@ edge_Phase.prototype = {
 		this.mapSystem.set(system,node);
 		var key = this.key(system);
 		this.mapType.set(key,system);
-		if(null != this.engine) this.engine.addSystem(this,system);
+		this.engine.addSystem(system);
 		return node;
 	}
 	,key: function(system) {
@@ -655,14 +657,6 @@ edge_World.prototype = {
 		if(!this.running) return;
 		this.running = false;
 		this.cancel();
-	}
-	,clear: function() {
-		var $it0 = this.engine.phases();
-		while( $it0.hasNext() ) {
-			var phase = $it0.next();
-			phase.clear();
-		}
-		this.engine.clear();
 	}
 	,__class__: edge_World
 };

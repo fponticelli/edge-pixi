@@ -25,6 +25,6 @@ class BunnyExterminator implements edge.ISystem {
 	}
 
 	public function after() {
-		trace('Bunnies $counter');
+		//trace('Bunnies $counter');
 	}
 }
