@@ -221,8 +221,8 @@ UpdateGeometryPosition.prototype = {
 	}
 	,update: function(p,pv,ha) {
 		var g = new PIXI.Graphics();
-		ha.origin.x += pv.dx;
-		ha.origin.y += pv.dy;
+		ha.origin.x += pv.x;
+		ha.origin.y += pv.y;
 		if(this.isOverlapping(ha.origin,ha.radius,this.targets)) g.beginFill(15610675); else g.beginFill(43741);
 		g.drawCircle(ha.origin.x,ha.origin.y,ha.radius);
 		g.endFill();
@@ -721,18 +721,14 @@ edge_pixi_components_Position.__super__ = PIXI.Point;
 edge_pixi_components_Position.prototype = $extend(PIXI.Point.prototype,{
 	__class__: edge_pixi_components_Position
 });
-var edge_pixi_components_PositionVelocity = function(dx,dy) {
-	this.dx = dx;
-	this.dy = dy;
+var edge_pixi_components_PositionVelocity = function(x,y) {
+	PIXI.Point.call(this,x,y);
 };
 edge_pixi_components_PositionVelocity.__name__ = ["edge","pixi","components","PositionVelocity"];
-edge_pixi_components_PositionVelocity.__interfaces__ = [edge_IComponent];
-edge_pixi_components_PositionVelocity.prototype = {
-	toString: function(dx,dy) {
-		return "PositionVelocity(dx=$dx,dy=$dy)";
-	}
-	,__class__: edge_pixi_components_PositionVelocity
-};
+edge_pixi_components_PositionVelocity.__super__ = PIXI.Point;
+edge_pixi_components_PositionVelocity.prototype = $extend(PIXI.Point.prototype,{
+	__class__: edge_pixi_components_PositionVelocity
+});
 var edge_pixi_systems_Renderer = function(renderer,stage) {
 	if(null != stage) this.stage = stage; else this.stage = new PIXI.Container();
 	this.renderer = renderer;

@@ -39,8 +39,8 @@ class UpdateGeometryPosition implements edge.ISystem {
   public function update(p : Position, pv : PositionVelocity, ha : HitArea) {
     var g = new Graphics();
 
-    ha.origin.x += pv.dx;
-    ha.origin.y += pv.dy;
+    ha.origin.x += pv.x;
+    ha.origin.y += pv.y;
 
     if (isOverlapping(ha.origin, ha.radius, targets)) {
       g.beginFill(0xee3333);

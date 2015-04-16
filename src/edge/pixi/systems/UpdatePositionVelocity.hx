@@ -7,7 +7,7 @@ import edge.pixi.components.PositionVelocity;
 
 class UpdatePositionVelocity implements ISystem {
   public function update(r : Position, rs : PositionVelocity) {
-    r.x += rs.dx;
-    r.y += rs.dy;
+    r.x += rs.x;
+    r.y += rs.y;
   }
 }

@@ -749,18 +749,14 @@ edge_pixi_components_Position.__super__ = PIXI.Point;
 edge_pixi_components_Position.prototype = $extend(PIXI.Point.prototype,{
 	__class__: edge_pixi_components_Position
 });
-var edge_pixi_components_PositionVelocity = function(dx,dy) {
-	this.dx = dx;
-	this.dy = dy;
+var edge_pixi_components_PositionVelocity = function(x,y) {
+	PIXI.Point.call(this,x,y);
 };
 edge_pixi_components_PositionVelocity.__name__ = ["edge","pixi","components","PositionVelocity"];
-edge_pixi_components_PositionVelocity.__interfaces__ = [edge_IComponent];
-edge_pixi_components_PositionVelocity.prototype = {
-	toString: function(dx,dy) {
-		return "PositionVelocity(dx=$dx,dy=$dy)";
-	}
-	,__class__: edge_pixi_components_PositionVelocity
-};
+edge_pixi_components_PositionVelocity.__super__ = PIXI.Point;
+edge_pixi_components_PositionVelocity.prototype = $extend(PIXI.Point.prototype,{
+	__class__: edge_pixi_components_PositionVelocity
+});
 var edge_pixi_components_Rotation = function(angle) {
 	this.angle = angle;
 };
@@ -866,8 +862,8 @@ edge_pixi_systems_UpdatePositionVelocity.__name__ = ["edge","pixi","systems","Up
 edge_pixi_systems_UpdatePositionVelocity.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_UpdatePositionVelocity.prototype = {
 	update: function(r,rs) {
-		r.x += rs.dx;
-		r.y += rs.dy;
+		r.x += rs.x;
+		r.y += rs.y;
 		return true;
 	}
 	,toString: function() {
