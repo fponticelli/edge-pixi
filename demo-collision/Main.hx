@@ -18,7 +18,7 @@ class Main {
       world.engine.create([
         new Position(posX, posY),
         new PositionVelocity(r(), r()),
-        new HitArea(new Point(posX, posY), 15)
+        new HitArea(new Point(posX, posY), Math.random() * 10 + 15)
       ]);
     }
 
