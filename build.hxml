@@ -15,3 +15,13 @@
 -lib thx.core
 -cp src
 -cp examples/collision
+
+--next
+
+-js bin/camera.js
+-main Main
+-lib pixijs
+-lib edge
+-lib thx.core
+-cp src
+-cp examples/camera
