@@ -185,7 +185,7 @@ HxOverrides.iter = function(a) {
 var Main = function(renderer) {
 	var world = new edge_World();
 	var rendererSystem = new edge_pixi_systems_Renderer(renderer);
-	world.physics.add(new MouseBunnyCreator(rendererSystem.stage));
+	world.physics.add(new MouseBunnyCreator(rendererSystem.container));
 	world.physics.add(new edge_pixi_systems_UpdatePositionVelocity());
 	world.physics.add(new edge_pixi_systems_UpdateRotationVelocity());
 	world.render.add(new edge_pixi_systems_UpdatePosition());
@@ -779,8 +779,8 @@ edge_pixi_components_RotationVelocity.prototype = {
 	}
 	,__class__: edge_pixi_components_RotationVelocity
 };
-var edge_pixi_systems_Renderer = function(renderer,stage) {
-	if(null != stage) this.stage = stage; else this.stage = new PIXI.Container();
+var edge_pixi_systems_Renderer = function(renderer,container) {
+	if(null == container) this.container = new PIXI.Container(); else this.container = container;
 	this.renderer = renderer;
 	this.__process__ = new edge_pixi_systems_Renderer_$SystemProcess(this);
 };
@@ -788,13 +788,13 @@ edge_pixi_systems_Renderer.__name__ = ["edge","pixi","systems","Renderer"];
 edge_pixi_systems_Renderer.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_Renderer.prototype = {
 	entitiesAdded: function(e,data) {
-		this.stage.addChild(data.d.node);
+		this.container.addChild(data.d.node);
 	}
 	,entitiesRemoved: function(e,data) {
-		this.stage.removeChild(data.d.node);
+		this.container.removeChild(data.d.node);
 	}
 	,update: function() {
-		this.renderer.render(this.stage);
+		this.renderer.render(this.container);
 		return true;
 	}
 	,toString: function() {

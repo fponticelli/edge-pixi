@@ -11,7 +11,7 @@ class Main {
 				rendererSystem = new Renderer(renderer);
 
 		// interaction
-		world.physics.add(new MouseBunnyCreator(rendererSystem.stage));
+		world.physics.add(new MouseBunnyCreator(rendererSystem.container));
 
 		// physics
 		world.physics.add(new UpdatePositionVelocity());

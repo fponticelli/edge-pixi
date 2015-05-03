@@ -583,8 +583,8 @@ edge_pixi_components_Display.prototype = {
 	}
 	,__class__: edge_pixi_components_Display
 };
-var edge_pixi_systems_Renderer = function(renderer,stage) {
-	if(null != stage) this.stage = stage; else this.stage = new PIXI.Container();
+var edge_pixi_systems_Renderer = function(renderer,container) {
+	if(null == container) this.container = new PIXI.Container(); else this.container = container;
 	this.renderer = renderer;
 	this.__process__ = new edge_pixi_systems_Renderer_$SystemProcess(this);
 };
@@ -592,13 +592,13 @@ edge_pixi_systems_Renderer.__name__ = ["edge","pixi","systems","Renderer"];
 edge_pixi_systems_Renderer.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_Renderer.prototype = {
 	entitiesAdded: function(e,data) {
-		this.stage.addChild(data.d.node);
+		this.container.addChild(data.d.node);
 	}
 	,entitiesRemoved: function(e,data) {
-		this.stage.removeChild(data.d.node);
+		this.container.removeChild(data.d.node);
 	}
 	,update: function() {
-		this.renderer.render(this.stage);
+		this.renderer.render(this.container);
 		return true;
 	}
 	,toString: function() {

@@ -23,7 +23,7 @@ class Main {
     }
 
     world.render.add(renderingSystem);
-    world.render.add(new UpdateGeometryPosition(renderingSystem.stage));
+    world.render.add(new UpdateGeometryPosition(renderingSystem.container));
 
     world.start();
   }

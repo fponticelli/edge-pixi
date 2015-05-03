@@ -7,27 +7,24 @@ import pixi.core.display.Container;
 import edge.pixi.components.Display;
 
 class Renderer implements ISystem {
-  public var stage(default, null) : Container;
+  public var container(default, null) : Container;
   public var renderer(default, null) : SystemRenderer;
 	var entities : View<{ d : Display }>;
 
-  public function new(renderer : SystemRenderer, ?stage : Container) {
-    if(null != stage)
-      this.stage = stage;
-    else
-      this.stage = new Container();
+  public function new(renderer : SystemRenderer, ?container : Container) {
+    this.container = null == container ? new Container() : container;
     this.renderer = renderer;
   }
 
 	public function entitiesAdded(e : Entity, data : { d : Display }) {
-    stage.addChild(data.d.node);
+    container.addChild(data.d.node);
   }
 
   public function entitiesRemoved(e : Entity, data : { d : Display }) {
-    stage.removeChild(data.d.node);
+    container.removeChild(data.d.node);
   }
 
   public function update() {
-    renderer.render(stage);
+    renderer.render(container);
   }
 }
