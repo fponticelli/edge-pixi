@@ -107,8 +107,13 @@ HxOverrides.iter = function(a) {
 };
 var Main = function(renderer) {
 	var world = new edge_World();
-	var renderingSystem = new edge_pixi_systems_Renderer(renderer);
-	world.render.add(renderingSystem);
+	var stage = new PIXI.Container();
+	var gameWorld = new PIXI.Container();
+	var camera = new PIXI.Container();
+	var gameWorldRendering = new edge_pixi_systems_Renderer(renderer,gameWorld);
+	stage.addChild(gameWorld);
+	stage.addChild(camera);
+	world.render.add(gameWorldRendering);
 	world.start();
 };
 Main.__name__ = ["Main"];

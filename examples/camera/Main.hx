@@ -1,4 +1,5 @@
 import js.Browser;
+import pixi.core.display.Container;
 import pixi.core.renderers.SystemRenderer;
 import pixi.core.renderers.Detector;
 import pixi.core.math.Point;
@@ -9,9 +10,15 @@ import edge.pixi.systems.*;
 class Main {
   public function new(renderer : SystemRenderer) {
     var world = new edge.World(),
-        renderingSystem = new Renderer(renderer);
+        stage = new Container(),
+        gameWorld = new Container(),
+        camera = new Container(),
+        gameWorldRendering = new Renderer(renderer, gameWorld);
 
-    world.render.add(renderingSystem);
+    stage.addChild(gameWorld);
+    stage.addChild(camera);
+
+    world.render.add(gameWorldRendering);
     world.start();
   }
 
