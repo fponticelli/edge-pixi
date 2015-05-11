@@ -1090,6 +1090,14 @@ thx_Arrays.contains = function(array,element,eq) {
 		return false;
 	}
 };
+thx_Arrays.containsAny = function(array,elements,eq) {
+	var $it0 = $iterator(elements)();
+	while( $it0.hasNext() ) {
+		var el = $it0.next();
+		if(thx_Arrays.contains(array,el,eq)) return true;
+	}
+	return false;
+};
 thx_Arrays.cross = function(a,b) {
 	var r = [];
 	var _g = 0;
@@ -1319,6 +1327,21 @@ thx_Arrays.shuffle = function(a) {
 		array.push(a[index]);
 	}
 	return array;
+};
+thx_Arrays.split = function(array,parts) {
+	var len = Math.ceil(array.length / parts);
+	return thx_Arrays.splitBy(array,len);
+};
+thx_Arrays.splitBy = function(array,len) {
+	var res = [];
+	len = thx_Ints.min(len,array.length);
+	var _g1 = 0;
+	var _g = Math.ceil(array.length / len);
+	while(_g1 < _g) {
+		var p = _g1++;
+		res.push(array.slice(p * len,(p + 1) * len));
+	}
+	return res;
 };
 thx_Arrays.take = function(arr,n) {
 	return arr.slice(0,n);
@@ -1744,6 +1767,13 @@ thx_Strings.compare = function(a,b) {
 thx_Strings.contains = function(s,test) {
 	return s.indexOf(test) >= 0;
 };
+thx_Strings.containsAny = function(s,tests) {
+	return thx_Arrays.any(tests,(function(f,s1) {
+		return function(a1) {
+			return f(s1,a1);
+		};
+	})(thx_Strings.contains,s));
+};
 thx_Strings.dasherize = function(s) {
 	return StringTools.replace(s,"_","-");
 };
@@ -2157,6 +2187,7 @@ thx__$Tuple_Tuple6_$Impl_$.toString = function(this1) {
 thx__$Tuple_Tuple6_$Impl_$.arrayToTuple6 = function(v) {
 	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3], _4 : v[4], _5 : v[5]};
 };
+function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; }
 var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
 if(Array.prototype.indexOf) HxOverrides.indexOf = function(a,o,i) {
