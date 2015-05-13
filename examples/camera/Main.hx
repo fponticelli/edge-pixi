@@ -12,26 +12,46 @@ class Main {
     var world = new edge.World(),
         stage = new Container(),
         gameWorld = new Container(),
-        camera = new Container(),
+        ui = new Container(),
         gameWorldRendering = new Renderer(renderer, gameWorld),
-        cameraRendering = new CameraRenderer(renderer, camera);
+        uiRendering = new UIRenderer(renderer, ui);
 
     // set some dimensions
     gameWorld.width = 1600;
     gameWorld.height = 1200;
-    camera.width = 800;
-    camera.height = 600;
 
     // add some trees to the game world
     for (i in 0...60) {
-
+      var sprite = Display.fromImagePath('assets/bunny.png');
+      sprite.node.x = r(1600);
+      sprite.node.y = r(1200);
+      world.engine.create([ sprite ]);
     }
 
-    stage.addChild(gameWorld);
-    stage.addChild(camera);
+    var myCam = new Camera(0, 0);
+    world.engine.create([
+      myCam,
+      new Widget(gameWorld)
+    ]);
+
+    var stationaryBunny = Widget.fromImagePath('assets/bunny.png');
+    stationaryBunny.node.x = 50;
+    stationaryBunny.node.y = 400;
+    world.engine.create([ stationaryBunny ]);
+
+    // stage.addChild(gameWorld);
+    stage.addChild(ui);
+    ui.addChild(gameWorld);
 
     world.render.add(gameWorldRendering);
+    world.render.add(new PositionCamera());
+    world.render.add(uiRendering);
     world.start();
+
+    thx.Timer.repeat(function () {
+      myCam.x++;
+      myCam.y++;
+    }, 50);
   }
 
   function r(lessThan : Float) {
