@@ -113,7 +113,7 @@ var Main = function(renderer) {
 		var i = _g++;
 		var posX = Math.random() * 800;
 		var posY = Math.random() * 600;
-		world.engine.create([new edge_pixi_components_Position(posX,posY),new edge_pixi_components_PositionVelocity(Main.r(),Main.r()),new edge_pixi_components_HitArea(new PIXI.Point(posX,posY),Math.random() * 10 + 15)]);
+		world.engine.create([new edge_pixi_components_PositionVelocity(Main.r(),Main.r()),new edge_pixi_components_HitArea(new PIXI.Point(posX,posY),Math.random() * 10 + 15)]);
 	}
 	world.render.add(renderingSystem);
 	world.render.add(new UpdateGeometryPosition(renderingSystem.container));
@@ -185,9 +185,6 @@ StringTools.replace = function(s,sub,by) {
 };
 var Type = function() { };
 Type.__name__ = ["Type"];
-Type.getSuperClass = function(c) {
-	return c.__super__;
-};
 Type.getClassName = function(c) {
 	var a = c.__name__;
 	if(a == null) return null;
@@ -222,7 +219,7 @@ UpdateGeometryPosition.prototype = {
 		}
 		return false;
 	}
-	,update: function(p,pv,ha) {
+	,update: function(pv,ha) {
 		var g = new PIXI.Graphics();
 		ha.origin.x += pv.x;
 		ha.origin.y += pv.y;
@@ -267,7 +264,7 @@ UpdateGeometryPosition_$SystemProcess.prototype = {
 			var item = $it0.next();
 			this.system.entity = item.entity;
 			data = item.data;
-			result = this.system.update(data.p,data.pv,data.ha);
+			result = this.system.update(data.pv,data.ha);
 			if(!result) break;
 		}
 		return result;
@@ -288,15 +285,11 @@ UpdateGeometryPosition_$SystemProcess.prototype = {
 	}
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
-		var count = 3;
-		var o = { p : null, pv : null, ha : null};
+		var count = 2;
+		var o = { pv : null, ha : null};
 		var $it0 = entity.map.iterator();
 		while( $it0.hasNext() ) {
 			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
-				o.p = component;
-				if(--count == 0) break; else continue;
-			}
 			if(js_Boot.__instanceof(component,edge_pixi_components_PositionVelocity)) {
 				o.pv = component;
 				if(--count == 0) break; else continue;
@@ -452,26 +445,19 @@ edge_Entity.prototype = {
 		return this.map.iterator();
 	}
 	,_add: function(component) {
-		var type = this.key(component);
+		var type = Type.getClassName(component == null?null:js_Boot.getClass(component));
 		if(this.map.exists(type)) this.remove(this.map.get(type));
 		this.map.set(type,component);
 	}
 	,_remove: function(component) {
-		var type = this.key(component);
+		var type = Type.getClassName(component == null?null:js_Boot.getClass(component));
 		this._removeTypeName(type);
 	}
 	,_removeTypeName: function(type) {
 		this.map.remove(type);
 	}
 	,key: function(component) {
-		var t;
-		if(component == null) t = null; else t = js_Boot.getClass(component);
-		var s = Type.getSuperClass(t);
-		while(s != null && s != edge_IComponent) {
-			t = s;
-			s = Type.getSuperClass(t);
-		}
-		return Type.getClassName(t);
+		return Type.getClassName(component == null?null:js_Boot.getClass(component));
 	}
 	,__class__: edge_Entity
 };
@@ -723,14 +709,6 @@ edge_pixi_components_HitArea.prototype = {
 	}
 	,__class__: edge_pixi_components_HitArea
 };
-var edge_pixi_components_Position = function(x,y) {
-	PIXI.Point.call(this,x,y);
-};
-edge_pixi_components_Position.__name__ = ["edge","pixi","components","Position"];
-edge_pixi_components_Position.__super__ = PIXI.Point;
-edge_pixi_components_Position.prototype = $extend(PIXI.Point.prototype,{
-	__class__: edge_pixi_components_Position
-});
 var edge_pixi_components_PositionVelocity = function(x,y) {
 	PIXI.Point.call(this,x,y);
 };
@@ -1051,7 +1029,7 @@ js_Boot.__isNativeObj = function(o) {
 	return js_Boot.__nativeClassName(o) != null;
 };
 js_Boot.__resolveNativeClass = function(name) {
-	if(typeof window != "undefined") return window[name]; else return global[name];
+	return (Function("return typeof " + name + " != \"undefined\" ? " + name + " : null"))();
 };
 var thx_Arrays = function() { };
 thx_Arrays.__name__ = ["thx","Arrays"];
