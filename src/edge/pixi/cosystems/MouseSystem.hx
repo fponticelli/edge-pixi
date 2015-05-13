@@ -1,7 +1,7 @@
 package edge.pixi.cosystems;
 
 import pixi.core.display.Container;
-import pixi.plugins.eventemitter.EventTarget;
+import pixi.interaction.EventTarget;
 import pixi.core.math.Point;
 
 class MouseSystem {
