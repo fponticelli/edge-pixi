@@ -13,13 +13,29 @@ class Main {
         stage = new Container(),
         gameWorld = new Container(),
         camera = new Container(),
-        gameWorldRendering = new Renderer(renderer, gameWorld);
+        gameWorldRendering = new Renderer(renderer, gameWorld),
+        cameraRendering = new CameraRenderer(renderer, camera);
+
+    // set some dimensions
+    gameWorld.width = 1600;
+    gameWorld.height = 1200;
+    camera.width = 800;
+    camera.height = 600;
+
+    // add some trees to the game world
+    for (i in 0...60) {
+
+    }
 
     stage.addChild(gameWorld);
     stage.addChild(camera);
 
     world.render.add(gameWorldRendering);
     world.start();
+  }
+
+  function r(lessThan : Float) {
+    return Math.floor(Math.random() * lessThan);
   }
 
   static function main() {
