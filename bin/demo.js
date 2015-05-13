@@ -23,8 +23,8 @@ BunnyExterminator.prototype = {
 	before: function() {
 		this.counter = 0;
 	}
-	,update: function(position) {
-		if(position.x < -this.offset || position.x > this.width + this.offset || position.y < -this.offset || position.y > this.height + this.offset) this.entity.destroy(); else this.counter++;
+	,update: function(d) {
+		if(d.node.x < -this.offset || d.node.x > this.width + this.offset || d.node.y < -this.offset || d.node.y > this.height + this.offset) this.entity.destroy(); else this.counter++;
 		return true;
 	}
 	,after: function() {
@@ -61,7 +61,7 @@ BunnyExterminator_$SystemProcess.prototype = {
 			var item = $it0.next();
 			this.system.entity = item.entity;
 			data = item.data;
-			result = this.system.update(data.position);
+			result = this.system.update(data.d);
 			if(!result) break;
 		}
 		this.system.after();
@@ -70,12 +70,12 @@ BunnyExterminator_$SystemProcess.prototype = {
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
 		var count = 1;
-		var o = { position : null};
+		var o = { d : null};
 		var $it0 = entity.map.iterator();
 		while( $it0.hasNext() ) {
 			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
-				o.position = component;
+			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
+				o.d = component;
 				if(--count == 0) break; else continue;
 			}
 		}
@@ -188,8 +188,6 @@ var Main = function(renderer) {
 	world.physics.add(new MouseBunnyCreator(rendererSystem.container));
 	world.physics.add(new edge_pixi_systems_UpdatePositionVelocity());
 	world.physics.add(new edge_pixi_systems_UpdateRotationVelocity());
-	world.render.add(new edge_pixi_systems_UpdatePosition());
-	world.render.add(new edge_pixi_systems_UpdateRotation());
 	world.render.add(rendererSystem);
 	world.frame.add(new BunnyExterminator(800,600,30));
 	world.start();
@@ -253,7 +251,9 @@ MouseBunnyCreator.__super__ = edge_pixi_cosystems_MouseSystem;
 MouseBunnyCreator.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,{
 	createBunny: function(x,y) {
 		var sprite = edge_pixi_components_Display.fromImagePath("assets/bunny.png",0.5,0.5);
-		return this.engine.create([sprite,new edge_pixi_components_Position(x,y),new edge_pixi_components_Rotation(0),new edge_pixi_components_RotationVelocity(MouseBunnyCreator.r() * 0.3),new edge_pixi_components_PositionVelocity(MouseBunnyCreator.r() + this.dx,MouseBunnyCreator.r() + this.dy)]);
+		sprite.node.x = x;
+		sprite.node.y = y;
+		return this.engine.create([sprite,new edge_pixi_components_RotationVelocity(MouseBunnyCreator.r() * 0.3),new edge_pixi_components_PositionVelocity(MouseBunnyCreator.r() + this.dx,MouseBunnyCreator.r() + this.dy)]);
 	}
 	,update: function() {
 		if(this.isDown) {
@@ -342,9 +342,6 @@ StringTools.replace = function(s,sub,by) {
 };
 var Type = function() { };
 Type.__name__ = ["Type"];
-Type.getSuperClass = function(c) {
-	return c.__super__;
-};
 Type.getClassName = function(c) {
 	var a = c.__name__;
 	if(a == null) return null;
@@ -492,26 +489,19 @@ edge_Entity.prototype = {
 		return this.map.iterator();
 	}
 	,_add: function(component) {
-		var type = this.key(component);
+		var type = Type.getClassName(component == null?null:js_Boot.getClass(component));
 		if(this.map.exists(type)) this.remove(this.map.get(type));
 		this.map.set(type,component);
 	}
 	,_remove: function(component) {
-		var type = this.key(component);
+		var type = Type.getClassName(component == null?null:js_Boot.getClass(component));
 		this._removeTypeName(type);
 	}
 	,_removeTypeName: function(type) {
 		this.map.remove(type);
 	}
 	,key: function(component) {
-		var t;
-		if(component == null) t = null; else t = js_Boot.getClass(component);
-		var s = Type.getSuperClass(t);
-		while(s != null && s != edge_IComponent) {
-			t = s;
-			s = Type.getSuperClass(t);
-		}
-		return Type.getClassName(t);
+		return Type.getClassName(component == null?null:js_Boot.getClass(component));
 	}
 	,__class__: edge_Entity
 };
@@ -751,14 +741,6 @@ edge_pixi_components_Display.prototype = {
 	}
 	,__class__: edge_pixi_components_Display
 };
-var edge_pixi_components_Position = function(x,y) {
-	PIXI.Point.call(this,x,y);
-};
-edge_pixi_components_Position.__name__ = ["edge","pixi","components","Position"];
-edge_pixi_components_Position.__super__ = PIXI.Point;
-edge_pixi_components_Position.prototype = $extend(PIXI.Point.prototype,{
-	__class__: edge_pixi_components_Position
-});
 var edge_pixi_components_PositionVelocity = function(x,y) {
 	PIXI.Point.call(this,x,y);
 };
@@ -767,17 +749,6 @@ edge_pixi_components_PositionVelocity.__super__ = PIXI.Point;
 edge_pixi_components_PositionVelocity.prototype = $extend(PIXI.Point.prototype,{
 	__class__: edge_pixi_components_PositionVelocity
 });
-var edge_pixi_components_Rotation = function(angle) {
-	this.angle = angle;
-};
-edge_pixi_components_Rotation.__name__ = ["edge","pixi","components","Rotation"];
-edge_pixi_components_Rotation.__interfaces__ = [edge_IComponent];
-edge_pixi_components_Rotation.prototype = {
-	toString: function(angle) {
-		return "Rotation(angle=$angle)";
-	}
-	,__class__: edge_pixi_components_Rotation
-};
 var edge_pixi_components_RotationVelocity = function(dangle) {
 	this.dangle = dangle;
 };
@@ -849,31 +820,15 @@ edge_pixi_systems_Renderer_$SystemProcess.prototype = {
 	}
 	,__class__: edge_pixi_systems_Renderer_$SystemProcess
 };
-var edge_pixi_systems_UpdatePosition = function() {
-	this.__process__ = new edge_pixi_systems_UpdatePosition_$SystemProcess(this);
-};
-edge_pixi_systems_UpdatePosition.__name__ = ["edge","pixi","systems","UpdatePosition"];
-edge_pixi_systems_UpdatePosition.__interfaces__ = [edge_ISystem];
-edge_pixi_systems_UpdatePosition.prototype = {
-	update: function(d,p) {
-		d.node.x = p.x;
-		d.node.y = p.y;
-		return true;
-	}
-	,toString: function() {
-		return "edge.pixi.systems.UpdatePosition";
-	}
-	,__class__: edge_pixi_systems_UpdatePosition
-};
 var edge_pixi_systems_UpdatePositionVelocity = function() {
 	this.__process__ = new edge_pixi_systems_UpdatePositionVelocity_$SystemProcess(this);
 };
 edge_pixi_systems_UpdatePositionVelocity.__name__ = ["edge","pixi","systems","UpdatePositionVelocity"];
 edge_pixi_systems_UpdatePositionVelocity.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_UpdatePositionVelocity.prototype = {
-	update: function(r,rs) {
-		r.x += rs.x;
-		r.y += rs.y;
+	update: function(d,rs) {
+		d.node.x += rs.x;
+		d.node.y += rs.y;
 		return true;
 	}
 	,toString: function() {
@@ -901,7 +856,7 @@ edge_pixi_systems_UpdatePositionVelocity_$SystemProcess.prototype = {
 		while( $it0.hasNext() ) {
 			var item = $it0.next();
 			data = item.data;
-			result = this.system.update(data.r,data.rs);
+			result = this.system.update(data.d,data.rs);
 			if(!result) break;
 		}
 		return result;
@@ -909,12 +864,12 @@ edge_pixi_systems_UpdatePositionVelocity_$SystemProcess.prototype = {
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
 		var count = 2;
-		var o = { r : null, rs : null};
+		var o = { d : null, rs : null};
 		var $it0 = entity.map.iterator();
 		while( $it0.hasNext() ) {
 			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
-				o.r = component;
+			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
+				o.d = component;
 				if(--count == 0) break; else continue;
 			}
 			if(js_Boot.__instanceof(component,edge_pixi_components_PositionVelocity)) {
@@ -926,74 +881,14 @@ edge_pixi_systems_UpdatePositionVelocity_$SystemProcess.prototype = {
 	}
 	,__class__: edge_pixi_systems_UpdatePositionVelocity_$SystemProcess
 };
-var edge_pixi_systems_UpdatePosition_$SystemProcess = function(system) {
-	this.system = system;
-	this.updateItems = new edge_View();
-};
-edge_pixi_systems_UpdatePosition_$SystemProcess.__name__ = ["edge","pixi","systems","UpdatePosition_SystemProcess"];
-edge_pixi_systems_UpdatePosition_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
-edge_pixi_systems_UpdatePosition_$SystemProcess.prototype = {
-	removeEntity: function(entity) {
-		this.updateItems.tryRemove(entity);
-	}
-	,addEntity: function(entity) {
-		this.updateMatchRequirements(entity);
-	}
-	,update: function(engine,delta) {
-		var result = true;
-		var data;
-		var $it0 = this.updateItems.iterator();
-		while( $it0.hasNext() ) {
-			var item = $it0.next();
-			data = item.data;
-			result = this.system.update(data.d,data.p);
-			if(!result) break;
-		}
-		return result;
-	}
-	,updateMatchRequirements: function(entity) {
-		var removed = this.updateItems.tryRemove(entity);
-		var count = 2;
-		var o = { d : null, p : null};
-		var $it0 = entity.map.iterator();
-		while( $it0.hasNext() ) {
-			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
-				o.d = component;
-				if(--count == 0) break; else continue;
-			}
-			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
-				o.p = component;
-				if(--count == 0) break; else continue;
-			}
-		}
-		var added = count == 0 && this.updateItems.tryAdd(entity,o);
-	}
-	,__class__: edge_pixi_systems_UpdatePosition_$SystemProcess
-};
-var edge_pixi_systems_UpdateRotation = function() {
-	this.__process__ = new edge_pixi_systems_UpdateRotation_$SystemProcess(this);
-};
-edge_pixi_systems_UpdateRotation.__name__ = ["edge","pixi","systems","UpdateRotation"];
-edge_pixi_systems_UpdateRotation.__interfaces__ = [edge_ISystem];
-edge_pixi_systems_UpdateRotation.prototype = {
-	update: function(d,r) {
-		d.node.rotation = r.angle;
-		return true;
-	}
-	,toString: function() {
-		return "edge.pixi.systems.UpdateRotation";
-	}
-	,__class__: edge_pixi_systems_UpdateRotation
-};
 var edge_pixi_systems_UpdateRotationVelocity = function() {
 	this.__process__ = new edge_pixi_systems_UpdateRotationVelocity_$SystemProcess(this);
 };
 edge_pixi_systems_UpdateRotationVelocity.__name__ = ["edge","pixi","systems","UpdateRotationVelocity"];
 edge_pixi_systems_UpdateRotationVelocity.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_UpdateRotationVelocity.prototype = {
-	update: function(r,rs) {
-		r.angle += rs.dangle;
+	update: function(d,rs) {
+		d.node.rotation += rs.dangle;
 		return true;
 	}
 	,toString: function() {
@@ -1021,7 +916,7 @@ edge_pixi_systems_UpdateRotationVelocity_$SystemProcess.prototype = {
 		while( $it0.hasNext() ) {
 			var item = $it0.next();
 			data = item.data;
-			result = this.system.update(data.r,data.rs);
+			result = this.system.update(data.d,data.rs);
 			if(!result) break;
 		}
 		return result;
@@ -1029,12 +924,12 @@ edge_pixi_systems_UpdateRotationVelocity_$SystemProcess.prototype = {
 	,updateMatchRequirements: function(entity) {
 		var removed = this.updateItems.tryRemove(entity);
 		var count = 2;
-		var o = { r : null, rs : null};
+		var o = { d : null, rs : null};
 		var $it0 = entity.map.iterator();
 		while( $it0.hasNext() ) {
 			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_Rotation)) {
-				o.r = component;
+			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
+				o.d = component;
 				if(--count == 0) break; else continue;
 			}
 			if(js_Boot.__instanceof(component,edge_pixi_components_RotationVelocity)) {
@@ -1045,51 +940,6 @@ edge_pixi_systems_UpdateRotationVelocity_$SystemProcess.prototype = {
 		var added = count == 0 && this.updateItems.tryAdd(entity,o);
 	}
 	,__class__: edge_pixi_systems_UpdateRotationVelocity_$SystemProcess
-};
-var edge_pixi_systems_UpdateRotation_$SystemProcess = function(system) {
-	this.system = system;
-	this.updateItems = new edge_View();
-};
-edge_pixi_systems_UpdateRotation_$SystemProcess.__name__ = ["edge","pixi","systems","UpdateRotation_SystemProcess"];
-edge_pixi_systems_UpdateRotation_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
-edge_pixi_systems_UpdateRotation_$SystemProcess.prototype = {
-	removeEntity: function(entity) {
-		this.updateItems.tryRemove(entity);
-	}
-	,addEntity: function(entity) {
-		this.updateMatchRequirements(entity);
-	}
-	,update: function(engine,delta) {
-		var result = true;
-		var data;
-		var $it0 = this.updateItems.iterator();
-		while( $it0.hasNext() ) {
-			var item = $it0.next();
-			data = item.data;
-			result = this.system.update(data.d,data.r);
-			if(!result) break;
-		}
-		return result;
-	}
-	,updateMatchRequirements: function(entity) {
-		var removed = this.updateItems.tryRemove(entity);
-		var count = 2;
-		var o = { d : null, r : null};
-		var $it0 = entity.map.iterator();
-		while( $it0.hasNext() ) {
-			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
-				o.d = component;
-				if(--count == 0) break; else continue;
-			}
-			if(js_Boot.__instanceof(component,edge_pixi_components_Rotation)) {
-				o.r = component;
-				if(--count == 0) break; else continue;
-			}
-		}
-		var added = count == 0 && this.updateItems.tryAdd(entity,o);
-	}
-	,__class__: edge_pixi_systems_UpdateRotation_$SystemProcess
 };
 var haxe_IMap = function() { };
 haxe_IMap.__name__ = ["haxe","IMap"];
@@ -1343,7 +1193,7 @@ js_Boot.__isNativeObj = function(o) {
 	return js_Boot.__nativeClassName(o) != null;
 };
 js_Boot.__resolveNativeClass = function(name) {
-	if(typeof window != "undefined") return window[name]; else return global[name];
+	return (Function("return typeof " + name + " != \"undefined\" ? " + name + " : null"))();
 };
 var thx_Arrays = function() { };
 thx_Arrays.__name__ = ["thx","Arrays"];
