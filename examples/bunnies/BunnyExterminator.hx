@@ -16,8 +16,8 @@ class BunnyExterminator implements edge.ISystem {
 		counter = 0;
 	}
 
-	function update(position : Position) {
-		if(position.x < -offset || position.x > width + offset || position.y < -offset || position.y > height + offset) {
+	function update(d : Display) {
+		if(d.node.x < -offset || d.node.x > width + offset || d.node.y < -offset || d.node.y > height + offset) {
 			entity.destroy();
 		} else {
 			counter++;

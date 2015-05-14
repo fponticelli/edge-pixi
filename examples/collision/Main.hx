@@ -16,14 +16,13 @@ class Main {
       var posY = Math.random() * 600;
 
       world.engine.create([
-        new Position(posX, posY),
         new PositionVelocity(r(), r()),
         new HitArea(new Point(posX, posY), Math.random() * 10 + 15)
       ]);
     }
 
     world.render.add(renderingSystem);
-    world.render.add(new UpdateGeometryPosition(renderingSystem.stage));
+    world.render.add(new UpdateGeometryPosition(renderingSystem.container));
 
     world.start();
   }

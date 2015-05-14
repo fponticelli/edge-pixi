@@ -36,7 +36,7 @@ class UpdateGeometryPosition implements edge.ISystem {
   var targets : View<{ hitArea : HitArea }>;
   var entity : edge.Entity;
 
-  public function update(p : Position, pv : PositionVelocity, ha : HitArea) {
+  public function update(pv : PositionVelocity, ha : HitArea) {
     var g = new Graphics();
 
     ha.origin.x += pv.x;
